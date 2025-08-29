@@ -1,160 +1,283 @@
-# DB9000_PA_PLC_DATA 数据读取脚本
+# PLC MQTT 数据采集系统
 
-这是一个用于从西门子PLC的DB9000数据块读取数据的Python脚本。
+这是一个用于从西门子PLC的DB9000数据块读取数据并通过MQTT发送的Python系统。
 
 ## 功能特性
 
-- 连接到指定IP地址的西门子PLC
-- 读取DB9000数据块中的各种数据类型
-- 支持的数据类型：
-  - 16位整数 (INT)
-  - 32位整数 (DINT)
-  - 浮点数 (REAL)
-  - 字符串 (STRING)
-  - 布尔值 (BOOL)
-- 完整的日志记录
-- 错误处理和连接管理
+- **PLC数据读取**：支持读取DB9000中的各种数据类型
+- **MQTT集成**：直接发送数据到MQTT服务器
+- **智能优化**：只在数据发生变化时才上传，减少网络流量
+- **多平台支持**：Windows和Linux环境
+- **完整日志**：详细的操作日志和错误处理
+
+## 支持的数据类型
+
+1. **布尔值** (B1-B32): 地址 0.0 - 3.7
+2. **字符串** (String[20]): 地址 4.0
+3. **32位整数1** (DInt): 地址 26.0
+4. **32位整数2** (DInt): 地址 30.0
+5. **16位整数1** (Int): 地址 34.0
+6. **16位整数2** (Int): 地址 36.0
+
+## 文件说明
+
+### 核心脚本
+- `plc_mqtt_publisher.py` - 基础MQTT发布版本
+- `plc_mqtt_publisher_optimized.py` - **优化版本**（只在数据变化时上传）
+- `plc_logger.py` - 纯日志记录版本
+- `complete_data_reader.py` - 完整数据读取器
+- `quick_all_data_test.py` - 快速测试脚本
+
+### 配置文件
+- `config.py` - PLC和MQTT配置
+- `requirements.txt` - Python依赖包
+- `README.md` - 使用说明
 
 ## 安装依赖
-
-1. 确保已安装Python 3.6+
-2. 安装依赖包：
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Windows用户注意事项
-
-在Windows系统上，您可能需要安装snap7库的二进制文件：
-
-1. 下载snap7库：https://sourceforge.net/projects/snap7/
-2. 将snap7.dll文件复制到Python安装目录或系统PATH中
+### 依赖包
+- `python-snap7>=2.0.0` - 西门子PLC通信
+- `paho-mqtt>=1.6.0` - MQTT客户端
 
 ## 使用方法
 
-### 基本使用
-
-直接运行脚本：
-
+### 1. 基础MQTT发布版本
 ```bash
-python db9000_reader.py
+python plc_mqtt_publisher.py
 ```
 
-### 自定义配置
+### 2. 优化版本（推荐）
+```bash
+python plc_mqtt_publisher_optimized.py
+```
+**特点**：只在数据发生变化时才上传到MQTT，大大减少网络流量
 
-修改脚本中的配置参数：
-
-```python
-# PLC配置
-PLC_IP = "172.16.10.66"  # 修改为您的PLC IP地址
-DB_NUMBER = 9000         # 修改为您的DB块号
+### 3. 纯日志记录版本
+```bash
+python plc_logger.py
 ```
 
-### 在代码中使用
-
-```python
-from db9000_reader import DB9000Reader
-
-# 创建读取器实例
-reader = DB9000Reader("172.16.10.66")
-
-# 连接到PLC
-if reader.connect():
-    # 读取数据
-    data = reader.read_db_data(9000, 0, 100)
-    
-    # 读取特定数据类型
-    int_value = reader.read_int16(9000, 0)
-    real_value = reader.read_real(9000, 20)
-    string_value = reader.read_string(9000, 30, 20)
-    
-    # 断开连接
-    reader.disconnect()
-```
-
-## 数据读取方法
-
-### 读取原始数据
-```python
-data = reader.read_db_data(db_number=9000, start=0, size=100)
-```
-
-### 读取特定数据类型
-```python
-# 16位整数
-int16_value = reader.read_int16(9000, 0)
-
-# 32位整数
-int32_value = reader.read_int32(9000, 4)
-
-# 浮点数
-real_value = reader.read_real(9000, 8)
-
-# 字符串
-string_value = reader.read_string(9000, 30, 20)
-
-# 布尔值
-bool_value = reader.read_bool(9000, 0, 0)  # 读取第0字节的第0位
-```
-
-### 查看数据结构
-```python
-reader.print_data_structure(9000, 0, 100)  # 以十六进制格式显示数据
+### 4. 快速测试
+```bash
+python quick_all_data_test.py
 ```
 
 ## 配置说明
 
-### PLC连接参数
-- `ip_address`: PLC的IP地址
-- `rack`: 机架号（通常为0）
-- `slot`: 插槽号（通常为1）
+### PLC配置
+默认配置在脚本中：
+- **IP地址**: 172.16.10.66
+- **机架号**: 0
+- **插槽号**: 1
+- **DB块号**: 9000
 
-### 数据读取参数
-- `db_number`: DB块号（默认9000）
-- `start`: 起始字节地址
-- `size`: 读取字节数
+### MQTT配置
+默认配置：
+- **服务器**: Mqtt.dxiot.liju.cc
+- **端口**: 1883
+- **发布主题**: /dxiot/4q/pub/huaheng/zudui
+- **订阅主题**: /dxiot/4q/get/huaheng/zudui
 
-## 日志文件
+### 环境变量支持
+可以通过环境变量覆盖默认配置：
+```bash
+# MQTT配置
+export MQTT_BROKER="your-mqtt-server.com"
+export MQTT_PORT=1883
+export MQTT_BROKER_IP="120.26.64.215"  # 绕过DNS解析
+export MQTT_USERNAME="your-username"
+export MQTT_PASSWORD="your-password"
 
-脚本运行时会生成 `db9000_reader.log` 日志文件，记录：
-- 连接状态
-- 数据读取操作
-- 错误信息
-- 调试信息
+# 运行程序
+python plc_mqtt_publisher_optimized.py
+```
+
+## 数据格式
+
+程序发送JSON格式数据到MQTT：
+
+```json
+{
+  "timestamp": "2025-08-28 15:30:00",
+  "device_id": "PLC_DB9000",
+  "data": {
+    "booleans": {
+      "B1": true,
+      "B2": false,
+      "B3": true,
+      ...
+    },
+    "string": "",
+    "dint1": -2147483648,
+    "dint2": 2147483647,
+    "int1": -32768,
+    "int2": 32767
+  }
+}
+```
+
+## Linux部署指南
+
+### 1. 安装依赖
+```bash
+# Ubuntu/Debian
+sudo apt update
+sudo apt install python3 python3-pip build-essential git
+
+# 安装snap7库
+cd /tmp
+wget https://sourceforge.net/projects/snap7/files/1.4.2/snap7-full-1.4.2.7z/download -O snap7.7z
+sudo apt install p7zip-full
+7z x snap7.7z
+cd snap7-full-1.4.2/build/unix
+make -f x86_64_linux.mk
+sudo cp ../bin/x86_64-linux/libsnap7.so /usr/lib/
+sudo ln -s /usr/lib/libsnap7.so /usr/lib/libsnap7.so.1
+sudo ldconfig
+
+# 安装Python依赖
+pip3 install python-snap7 paho-mqtt
+```
+
+### 2. DNS配置（如果遇到解析问题）
+```bash
+# 方法1：使用环境变量绕过DNS
+export MQTT_BROKER_IP="120.26.64.215"
+python3 plc_mqtt_publisher_optimized.py
+
+# 方法2：修复DNS
+sudo systemctl enable --now systemd-resolved
+sudo rm -f /etc/resolv.conf
+sudo ln -s /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+sudo resolvectl dns enp2s0 223.5.5.5 114.114.114.114 8.8.8.8
+sudo resolvectl flush-caches
+```
+
+### 3. 网络配置（如果PLC连接不通）
+```bash
+# 给网卡添加PLC网段地址
+sudo ip addr add 172.16.10.203/24 dev enp2s0
+sudo ip route add 172.16.10.0/24 dev enp2s0
+
+# 测试连接
+ping 172.16.10.66
+nc -vz 172.16.10.66 102
+```
+
+### 4. 后台运行
+```bash
+# 使用nohup
+nohup python3 plc_mqtt_publisher_optimized.py > plc_mqtt.log 2>&1 &
+
+# 使用screen
+screen -S plc_mqtt
+python3 plc_mqtt_publisher_optimized.py
+# Ctrl+A+D 分离screen
+```
+
+### 5. 系统服务（可选）
+创建 `/etc/systemd/system/plc-mqtt.service`：
+```ini
+[Unit]
+Description=PLC MQTT Publisher
+After=network.target
+
+[Service]
+Type=simple
+User=your-user
+WorkingDirectory=/path/to/plc-mqtt
+ExecStart=/usr/bin/python3 /path/to/plc-mqtt/plc_mqtt_publisher_optimized.py
+Restart=always
+RestartSec=10
+Environment=MQTT_BROKER_IP=120.26.64.215
+
+[Install]
+WantedBy=multi-user.target
+```
+
+启动服务：
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable plc-mqtt
+sudo systemctl start plc-mqtt
+sudo systemctl status plc-mqtt
+```
+
+## 优化版本特性
+
+### 智能变化检测
+- 使用MD5哈希算法比较数据
+- 只比较实际数据内容，忽略时间戳
+- 只在数据真正发生变化时才上传
+
+### 统计信息
+- 总读取次数
+- 数据变化次数
+- 发布成功次数
+- 变化率统计
+
+### 日志示例
+```
+2025-08-28 15:30:00 - INFO - 数据变化 #1 - 发布成功
+2025-08-28 15:30:00 - INFO -   布尔值真值数量: 7/32
+2025-08-28 15:30:00 - INFO -   字符串: ''
+2025-08-28 15:30:00 - INFO -   DInt1: -2147483648, DInt2: 2147483647
+2025-08-28 15:30:00 - INFO -   Int1: -32768, Int2: 32767
+
+2025-08-28 15:30:20 - INFO - 数据未变化 - 总读取: 10, 变化发布: 1
+
+2025-08-28 15:35:00 - INFO - 采集结束统计:
+2025-08-28 15:35:00 - INFO -   总读取次数: 150
+2025-08-28 15:35:00 - INFO -   数据变化次数: 3
+2025-08-28 15:35:00 - INFO -   发布成功次数: 3
+2025-08-28 15:35:00 - INFO -   变化率: 2.00%
+```
 
 ## 故障排除
 
-### 连接问题
-1. 检查PLC IP地址是否正确
-2. 确保网络连接正常
-3. 检查防火墙设置
-4. 验证PLC是否支持S7协议
+### 常见问题
 
-### 数据读取问题
-1. 确认DB块号正确
-2. 检查起始地址和大小
-3. 验证数据类型匹配
+1. **PLC连接失败**
+   - 检查PLC IP地址是否正确
+   - 确认PLC是否开机并运行
+   - 检查网络连接和防火墙设置
 
-### Windows特定问题
-1. 确保snap7.dll在系统PATH中
-2. 以管理员权限运行
-3. 检查防病毒软件是否阻止连接
+2. **MQTT连接失败**
+   - 检查MQTT服务器地址和端口
+   - 使用环境变量 `MQTT_BROKER_IP` 绕过DNS问题
+   - 确认网络能访问MQTT服务器
 
-## 示例输出
+3. **DNS解析失败**
+   - 使用 `MQTT_BROKER_IP` 环境变量
+   - 修复系统DNS配置
+   - 在 `/etc/hosts` 中添加IP映射
 
-```
-2024-01-01 10:00:00 - INFO - 正在连接到PLC: 172.16.10.66
-2024-01-01 10:00:01 - INFO - 成功连接到PLC
-2024-01-01 10:00:01 - INFO - 开始读取DB9000数据...
-2024-01-01 10:00:01 - INFO - DB9000 数据结构 (起始地址: 0):
-2024-01-01 10:00:01 - INFO - ==================================================
-2024-01-01 10:00:01 - INFO - 0000: 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F |................|
-2024-01-01 10:00:01 - INFO - 0010: 10 11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F |................|
-2024-01-01 10:00:01 - INFO - ==================================================
-2024-01-01 10:00:01 - INFO - 已断开PLC连接
+4. **权限问题**
+   - 确保有足够的权限运行程序
+   - 检查文件权限设置
+
+### 调试命令
+```bash
+# 测试PLC连接
+ping 172.16.10.66
+nc -vz 172.16.10.66 102
+
+# 测试MQTT连接
+nc -vz Mqtt.dxiot.liju.cc 1883
+nslookup Mqtt.dxiot.liju.cc
+
+# 查看日志
+tail -f plc_mqtt_publisher_optimized.log
 ```
 
 ## 许可证
 
-本项目采用MIT许可证。 
+本项目采用MIT许可证。
+
+## 贡献
+
+欢迎提交Issue和Pull Request来改进这个项目。 

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>华恒物流站台监控</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<div class="container py-4">
+    <div class="text-center mb-5">
+        <h1 class="fw-bold">🚚 华恒物流站台监控仪表盘 🚚</h1>
+        <p class="text-muted">实时展示 40个站台 PLC 数据（自动刷新）</p>
+        <div class="row text-center">
+            <div class="col-md-3">
+                <small class="text-info">📍 每站台10字节结构</small>
+            </div>
+            <div class="col-md-3">
+                <small class="text-info">🔢 6个数据字段</small>
+            </div>
+            <div class="col-md-3">
+                <small class="text-info">🎯 第40站台偏移量390</small>
+            </div>
+            <div class="col-md-3">
+                <small class="text-info">📊 包含2个备用字段</small>
+            </div>
+        </div>
+    </div>
+    <table class="table table-bordered table-hover table-striped align-middle" id="station-table">
+        <thead class="table-primary text-center">
+        <tr>
+            <th>序号</th>
+            <th>站台名称</th>
+            <th>偏移量</th>
+            <th>Occupied</th>
+            <th>CallStation</th>
+            <th>Type</th>
+            <th>OldStation</th>
+            <th>更新时间</th>
+        </tr>
+        </thead>
+        <tbody class="text-center"></tbody>
+    </table>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+const tbody = document.querySelector('#station-table tbody');
+let snapshot = {};
+function badge(val, type){
+  if(type==='Occupied') return `<span class="badge ${val? 'badge-yes':'badge-no'}">${val?'有货':'空'}</span>`;
+  if(type==='CallStation') return `<span class="badge ${val? 'badge-call':'badge-no'}">${val?'呼叫':'无'}</span>`;
+  return val;
+}
+
+// 计算站台偏移量
+function calculateOffset(index) {
+  return index * 10;
+}
+
+function render(list){
+  const now = new Date();
+  // 过滤只显示0-39范围内的站台
+  const filteredList = list.filter(item => item.index >= 0 && item.index < 40);
+  filteredList.sort((a,b)=>a.index-b.index).forEach(item=>{
+    let tr = tbody.querySelector(`tr[data-idx='${item.index}']`);
+    const isNew = !tr;
+    if(isNew){
+      tr = document.createElement('tr');
+      tr.setAttribute('data-idx', item.index);
+      tbody.appendChild(tr);
+    }
+    const offset = calculateOffset(item.index);
+    const stationName = item.stationName || `${item.index + 1}号站台`;
+    const html = `
+      <td class="fw-bold">${item.index}</td>
+      <td><span class="badge bg-info text-dark" style="font-size: 0.75rem;">${stationName}</span></td>
+      <td><small class="text-info">${offset}</small></td>
+      <td>${badge(item.Occupied,'Occupied')}</td>
+      <td>${badge(item.CallStation,'CallStation')}</td>
+      <td>${item.Type}</td>
+      <td>${item.OldStation}</td>
+      <td><small>${now.toLocaleTimeString()}</small></td>`;
+    if(tr.innerHTML!==html){
+      tr.innerHTML = html;
+      tr.classList.add('fade-highlight');
+      setTimeout(()=>tr.classList.remove('fade-highlight'),2000);
+    }
+  });
+}
+
+socket.on('update', render);
+</script>
+</body>
+</html>

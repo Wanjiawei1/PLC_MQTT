@@ -1,0 +1,18 @@
+{
+  "timestamp": "YYYY-MM-DD HH:MM:SS",
+  "device_id": "PLC_DB3003",
+  "data": {
+    "work3_code": 0.0,
+    "work2_code": 0.0,
+    "work1_code": 0.0,
+    "gonyi_temp": 0.0,
+    "4_output": 0.0,
+    "3_output": 0.0,
+    "2_output": 0.0,
+    "1_output": 0.0,
+    "4_temp": 0.0,
+    "3_temp": 0.0,
+    "2_temp": 0.0,
+    "1_temp": 0.0
+  }
+}

@@ -1,0 +1,71 @@
+body {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e8f0ff 100%);
+}
+.table-striped>tbody>tr:nth-of-type(odd){
+  --bs-table-accent-bg: #f0f8ff;
+}
+.badge-yes{background-color:#28a745}
+.badge-no{background-color:#dc3545}
+.badge-call{background-color:#ffc107;color:#000}
+.badge-reserve{background-color:#6c757d;color:#fff}
+.fade-highlight{
+  animation: flash 2s forwards;
+}
+@keyframes flash{
+  0%{background-color:#ffe082;}
+  100%{background-color:transparent;}
+}
+
+/* 表格优化 */
+#station-table {
+  font-size: 0.9rem;
+}
+
+#station-table th {
+  white-space: nowrap;
+  font-size: 0.85rem;
+  padding: 0.5rem 0.3rem;
+}
+
+#station-table td {
+  padding: 0.4rem 0.3rem;
+}
+
+/* 站台名称列优化 */
+#station-table th:nth-child(2) {
+  min-width: 120px;
+}
+
+#station-table td:nth-child(2) {
+  max-width: 150px;
+  word-break: break-all;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .container {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  #station-table {
+    font-size: 0.8rem;
+  }
+  
+  #station-table th,
+  #station-table td {
+    padding: 0.3rem 0.2rem;
+  }
+  
+  .badge {
+    font-size: 0.7rem;
+  }
+  
+  /* 移动端站台名称优化 */
+  #station-table th:nth-child(2),
+  #station-table td:nth-child(2) {
+    min-width: 100px;
+    max-width: 120px;
+    font-size: 0.7rem;
+  }
+}
